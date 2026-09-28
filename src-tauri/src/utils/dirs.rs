@@ -36,9 +36,7 @@ pub fn app_home_dir() -> Result<PathBuf> {
 /// resolver rather than the desktop `dirs` crate.
 #[cfg(any(target_os = "android", target_os = "ios"))]
 pub fn app_home_dir() -> Result<PathBuf> {
-    let app_handle = crate::APP_HANDLE
-        .get()
-        .context("Tauri app handle is not initialized")?;
+    let app_handle = crate::APP_HANDLE.get().context("Tauri app handle is not initialized")?;
     app_handle
         .path()
         .app_data_dir()
@@ -59,6 +57,46 @@ pub fn app_resources_dir() -> Result<PathBuf> {
             Err(anyhow::anyhow!("Failed to get the resource directory"))
         }
     }
+}
+
+#[cfg(target_os = "android")]
+const ANDROID_CORE_LIBRARY: &str = "libverge_mihomo.so";
+
+/// Locate the Android core packaged in the APK's native library directory.
+/// Android labels the app data directory as `noexec`, while native libraries
+/// are extracted into an executable directory by the package manager.
+#[cfg(target_os = "android")]
+pub fn prepare_android_core() -> Result<PathBuf> {
+    let library_dirs = std::env::var_os("LD_LIBRARY_PATH")
+        .into_iter()
+        .flat_map(|paths| std::env::split_paths(&paths).collect::<Vec<_>>());
+    if let Some(path) = library_dirs
+        .map(|dir| dir.join(ANDROID_CORE_LIBRARY))
+        .find(|path| path.is_file())
+    {
+        return Ok(path);
+    }
+
+    let mapped_library = fs::read_to_string("/proc/self/maps")
+        .ok()
+        .into_iter()
+        .flat_map(|maps| maps.lines().map(str::to_owned).collect::<Vec<_>>())
+        .filter_map(|line| line.split_whitespace().last().map(PathBuf::from))
+        .find(|path| path.file_name().is_some_and(|name| name == "libapp_lib.so"));
+    let native_library = mapped_library.and_then(|path| {
+        let path_string = path.to_string_lossy();
+        if let Some(apk_end) = path_string.find("/base.apk!/") {
+            let apk_path = Path::new(&path_string[..apk_end + "/base.apk".len()]);
+            apk_path
+                .parent()
+                .map(|dir| dir.join("lib/arm64").join(ANDROID_CORE_LIBRARY))
+        } else {
+            path.parent().map(|dir| dir.join(ANDROID_CORE_LIBRARY))
+        }
+    });
+    native_library
+        .filter(|path| path.is_file())
+        .with_context(|| format!("Android mihomo native library is missing: {ANDROID_CORE_LIBRARY}"))
 }
 
 pub fn app_profiles_dir() -> Result<PathBuf> {

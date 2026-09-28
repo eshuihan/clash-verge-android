@@ -153,6 +153,7 @@ impl CoreManager {
     #[tracing::instrument(skip_all, level = "info", fields(pid = tracing::field::Empty))]
     pub(super) async fn start_core_by_sidecar(&self) -> Result<()> {
         self.wait_for_sidecar_exit().await?;
+        #[cfg(not(target_os = "android"))]
         let execution = clash_verge_service_ipc::execution::reserve_sidecar()
             .await
             .inspect_err(service::record_residual_service)?;
@@ -173,13 +174,23 @@ impl CoreManager {
         #[cfg(not(target_os = "windows"))]
         let config_file = Config::generate_file().await?;
         let app_handle = handle::Handle::app_handle();
+        #[cfg(target_os = "android")]
+        let core_path = dirs::prepare_android_core()?;
+        #[cfg(not(target_os = "android"))]
         let clash_core = Config::verge().await.latest_arc().get_valid_clash_core();
+        #[cfg(target_os = "android")]
+        let core_display = core_path.display().to_string();
+        #[cfg(not(target_os = "android"))]
+        let core_display = clash_core.clone();
         let config_dir = dirs::app_home_dir()?;
         #[cfg(unix)]
         discard_unwritable_core_cache(&config_dir);
 
         #[cfg(unix)]
         let previous_mask = unsafe { tauri_plugin_clash_verge_sysinfo::libc::umask(0o077) };
+        #[cfg(target_os = "android")]
+        let command = app_handle.shell().command(&core_path);
+        #[cfg(not(target_os = "android"))]
         let command = app_handle
             .shell()
             .sidecar(clash_core.as_str())
@@ -203,13 +214,18 @@ impl CoreManager {
         );
         let (mut rx, child) = command.spawn().map_err(|error| {
             anyhow::anyhow!(
-                "failed to start sidecar core {clash_core:?} with config {} and data directory {}: {error:#}",
+                "failed to start sidecar core {core_display:?} with config {} and data directory {}: {error:#}",
                 config_file.display(),
                 config_dir.display()
             )
         })?;
         let (terminated, termination) = tokio::sync::oneshot::channel();
-        *self.sidecar_exit.lock().await = Some(execution.release_after_exit(child.pid(), termination));
+        #[cfg(not(target_os = "android"))]
+        {
+            *self.sidecar_exit.lock().await = Some(execution.release_after_exit(child.pid(), termination));
+        }
+        #[cfg(target_os = "android")]
+        let _ = termination;
         #[cfg(target_os = "windows")]
         let job = {
             match create_and_assign_sidecar_job(child.pid()) {

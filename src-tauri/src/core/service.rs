@@ -1822,10 +1822,21 @@ impl ServiceManager {
     }
 
     pub async fn detect_startup_status(&self) {
+        // Android has no installable privileged service. The bundled mihomo process is the
+        // supported runtime, so settle on Sidecar directly instead of probing desktop service
+        // installation state (which also scans for desktop sidecar binaries).
+        #[cfg(target_os = "android")]
+        {
+            RUN_STATE.accept_sidecar();
+            return;
+        }
+
+        #[cfg(not(target_os = "android"))]
         if cfg!(feature = "dev-sidecar") {
             RUN_STATE.accept_sidecar();
             return;
         }
+        #[cfg(not(target_os = "android"))]
         RUN_STATE.observe_current_health().await;
     }
 

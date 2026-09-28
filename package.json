@@ -16,6 +16,7 @@
     "web:dev": "vite",
     "web:build": "tsc --noEmit && vite build",
     "web:serve": "vite preview",
+    "android:core": "node scripts/android-core.mjs",
     "prebuild": "node scripts/prebuild.mjs",
     "updater": "node scripts/updater.mjs",
     "updater-fixed-webview2": "node scripts/updater-fixed-webview2.mjs",

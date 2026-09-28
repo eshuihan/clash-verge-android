@@ -13,6 +13,8 @@ scripts/_env.sh
 .eslintcache
 .changelog_backups
 target
+src-tauri/resources/verge-mihomo-android-arm64
+src-tauri/resources/mihomo-android-arm64-v8-*.gz
 .vfox.toml
 .vfox
 .claude

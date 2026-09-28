@@ -38,9 +38,69 @@ fn main() -> Result<(), Box<dyn std::error::Error>> {
     {
         tauri_build::build();
         patch_mihomo_android_project();
+        package_android_core_as_native_library();
+        patch_android_native_library_extraction();
     }
 
     Ok(())
+}
+
+fn patch_android_native_library_extraction() {
+    if std::env::var("CARGO_CFG_TARGET_OS").as_deref() != Ok("android") {
+        return;
+    }
+
+    let Some(manifest_dir) = std::env::var_os("CARGO_MANIFEST_DIR") else {
+        return;
+    };
+    let project_path = std::env::var_os("TAURI_ANDROID_PROJECT_PATH")
+        .map(std::path::PathBuf::from)
+        .unwrap_or_else(|| std::path::PathBuf::from(manifest_dir).join("gen/android"));
+    let manifest = project_path.join("app/src/main/AndroidManifest.xml");
+    let Ok(contents) = std::fs::read_to_string(&manifest) else {
+        return;
+    };
+    if contents.contains("android:extractNativeLibs=") {
+        return;
+    }
+    let updated = contents.replace(
+        "        android:usesCleartextTraffic=\"${usesCleartextTraffic}\">",
+        "        android:usesCleartextTraffic=\"${usesCleartextTraffic}\"\n        android:extractNativeLibs=\"true\">",
+    );
+    if updated != contents {
+        let _ = std::fs::write(manifest, updated);
+    }
+}
+
+fn package_android_core_as_native_library() {
+    if std::env::var("CARGO_CFG_TARGET_OS").as_deref() != Ok("android") {
+        return;
+    }
+
+    let Some(manifest_dir) = std::env::var_os("CARGO_MANIFEST_DIR") else {
+        return;
+    };
+    let manifest_dir = std::path::PathBuf::from(manifest_dir);
+    let project_path = std::env::var_os("TAURI_ANDROID_PROJECT_PATH")
+        .map(std::path::PathBuf::from)
+        .unwrap_or_else(|| manifest_dir.join("gen/android"));
+    let source = manifest_dir.join("resources/verge-mihomo-android-arm64");
+    if !source.is_file() {
+        println!(
+            "cargo:warning=Android mihomo core is not present at {}",
+            source.display()
+        );
+        return;
+    }
+
+    let destination_dir = project_path.join("app/src/main/jniLibs/arm64-v8a");
+    let destination = destination_dir.join("libverge_mihomo.so");
+    if let Err(error) = std::fs::create_dir_all(&destination_dir).and_then(|_| std::fs::copy(&source, &destination)) {
+        println!(
+            "cargo:warning=Failed to package Android mihomo core at {}: {error}",
+            destination.display()
+        );
+    }
 }
 
 fn patch_mihomo_android_project() {
