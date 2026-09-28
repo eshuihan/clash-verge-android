@@ -330,11 +330,7 @@
         flex: 1 1 auto;
         min-height: 0;
         overflow-y: auto;
-        padding: 6px 8px;
-
-        > li {
-          padding: 0 !important;
-        }
+        padding: 16px 12px;
       }
 
       .the-traffic {
@@ -353,14 +349,6 @@
     .layout-content__right .the-content,
     .base-container section {
       scroll-padding: 32px;
-    }
-
-    .MuiListItemButton-root {
-      height: 36px !important;
-      min-height: 36px !important;
-      border-radius: 14px;
-      padding-top: 4px !important;
-      padding-bottom: 4px !important;
     }
 
     .MuiButtonBase-root:focus-visible,
