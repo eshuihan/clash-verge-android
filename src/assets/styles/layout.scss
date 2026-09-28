@@ -330,7 +330,12 @@
       }
 
       .the-traffic {
-        display: none;
+        display: block;
+        flex: 0 0 150px;
+
+        > div {
+          padding: 0 8px 8px;
+        }
       }
     }
 
