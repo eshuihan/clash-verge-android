@@ -2,6 +2,7 @@ import { getCurrentWindow } from '@tauri-apps/api/window'
 import React, { useCallback, useEffect, useMemo, useState } from 'react'
 
 import debounce from '@/utils/debounce'
+import getSystem from '@/utils/get-system'
 
 import { WindowContext } from './window-context'
 
@@ -9,7 +10,10 @@ export const WindowProvider: React.FC<{ children: React.ReactNode }> = ({
   children,
 }) => {
   const currentWindow = useMemo(() => getCurrentWindow(), [])
-  const [decorated, setDecorated] = useState<boolean | null>(null)
+  const isAndroid = useMemo(() => getSystem() === 'android', [])
+  const [decorated, setDecorated] = useState<boolean | null>(() =>
+    isAndroid ? true : null,
+  )
   const [maximized, setMaximized] = useState<boolean | null>(null)
 
   const close = useCallback(async () => {
@@ -72,15 +76,21 @@ export const WindowProvider: React.FC<{ children: React.ReactNode }> = ({
   }, [currentWindow])
 
   const toggleDecorations = useCallback(async () => {
+    if (isAndroid) return
+
     const currentVal = await currentWindow.isDecorated()
     await currentWindow.setDecorations(!currentVal)
     setDecorated(!currentVal)
-  }, [currentWindow])
+  }, [currentWindow, isAndroid])
 
   useEffect(() => {
+    if (isAndroid) {
+      return
+    }
+
     refreshDecorated()
     currentWindow.setMinimizable?.(true)
-  }, [currentWindow, refreshDecorated])
+  }, [currentWindow, isAndroid, refreshDecorated])
 
   const contextValue = useMemo(
     () => ({

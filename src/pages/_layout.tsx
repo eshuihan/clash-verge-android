@@ -43,6 +43,7 @@ const Layout = () => {
   const { verge } = useVerge()
   const { language } = verge ?? {}
   const navCollapsed = verge?.collapse_navbar ?? false
+  const isAndroid = OS === 'android'
   const { switchLanguage } = useI18n()
   const navigate = useNavigate()
   const themeReady = useMemo(() => Boolean(theme), [theme])
@@ -51,7 +52,7 @@ const Layout = () => {
 
   const customTitlebar = useMemo(
     () =>
-      decorated === false ? (
+      !isAndroid && decorated === false ? (
         <div className="the_titlebar">
           <div
             className="the_titlebar-drag-region"
@@ -60,7 +61,7 @@ const Layout = () => {
           <WindowControls ref={windowControlsRef} />
         </div>
       ) : null,
-    [decorated],
+    [decorated, isAndroid],
   )
 
   useLoadingOverlay(themeReady)
@@ -154,7 +155,7 @@ const Layout = () => {
             : {},
         ]}
       >
-        {decorated === false && <WindowResizeHandles />}
+        {!isAndroid && decorated === false && <WindowResizeHandles />}
 
         {/* Custom titlebar - rendered only when decorated is false, memoized for performance */}
         {customTitlebar}

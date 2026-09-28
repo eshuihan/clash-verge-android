@@ -1,0 +1,19 @@
+{
+  "identifier": "android-capability",
+  "description": "Permissions for Android applications",
+  "platforms": ["android"],
+  "webviews": ["main"],
+  "windows": ["main"],
+  "permissions": [
+    "core:default",
+    "core:window:allow-set-theme",
+    "notification:default",
+    "http:default",
+    "http:allow-fetch",
+    "opener:default",
+    "dialog:default",
+    "fs:default",
+    "clipboard-manager:default",
+    "mihomo:default"
+  ]
+}

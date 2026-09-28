@@ -262,6 +262,55 @@
   }
 }
 
+.android {
+  &.layout {
+    .layout-content__left {
+      flex: 0 0 240px;
+      width: 240px;
+      padding-bottom: 0;
+
+      .the-logo {
+        flex-basis: 72px;
+        padding: 0 20px;
+      }
+
+      .the-menu {
+        padding-top: 12px;
+      }
+    }
+
+    .layout-content__right {
+      .the-bar {
+        display: none;
+      }
+
+      .the-content {
+        top: 0;
+      }
+    }
+  }
+}
+
+@media (min-width: 720px) {
+  .android.layout {
+    --layout-nav-item-size: 56px;
+
+    .layout-content__left {
+      flex-basis: 280px;
+      width: 280px;
+
+      .the-menu {
+        padding: 16px 12px;
+      }
+    }
+
+    :focus-visible {
+      outline: 3px solid var(--primary-main);
+      outline-offset: 3px;
+    }
+  }
+}
+
 .layout.layout--nav-collapsed {
   --layout-nav-collapsed-width: 72px;
   --layout-nav-item-size: 52px;
