@@ -3,6 +3,7 @@
     "navigation": {
       "tabs": {
         "home": "Hogar",
+        "status": "Estado",
         "proxies": "Proxies",
         "profiles": "Perfiles",
         "connections": "Conexiones",

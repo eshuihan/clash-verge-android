@@ -212,6 +212,7 @@ export interface TranslationResources {
             proxies: string
             rules: string
             settings: string
+            status: string
             unlock: string
           }
         }

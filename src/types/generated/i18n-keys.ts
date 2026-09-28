@@ -113,6 +113,7 @@ export const translationKeys = [
   'home.components.clashMode.descriptions.global',
   'home.components.clashMode.descriptions.direct',
   'layout.components.navigation.tabs.home',
+  'layout.components.navigation.tabs.status',
   'layout.components.navigation.tabs.proxies',
   'layout.components.navigation.tabs.profiles',
   'layout.components.navigation.tabs.connections',

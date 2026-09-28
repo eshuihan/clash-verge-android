@@ -3,6 +3,7 @@
     "navigation": {
       "tabs": {
         "home": "ホーム",
+        "status": "ステータス",
         "proxies": "プロキシ",
         "profiles": "プロファイル",
         "connections": "接続",

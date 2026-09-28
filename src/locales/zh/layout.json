@@ -3,6 +3,7 @@
     "navigation": {
       "tabs": {
         "home": "首 页",
+        "status": "状 态",
         "proxies": "代 理",
         "profiles": "订 阅",
         "connections": "连 接",
