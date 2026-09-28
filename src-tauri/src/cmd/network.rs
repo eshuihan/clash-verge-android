@@ -1,48 +1,69 @@
 use super::CmdResult;
 use crate::cmd::StringifyErr as _;
+#[cfg(not(any(target_os = "android", target_os = "ios")))]
 use crate::core::{proxy_control, sysopt::Sysopt};
 
 use gethostname::gethostname;
 use network_interface::NetworkInterface;
 use serde_yaml_ng::Mapping;
+#[cfg(not(any(target_os = "android", target_os = "ios")))]
 use sysproxy::{Autoproxy, Sysproxy};
 use tauri_plugin_clash_verge_sysinfo;
 
 #[tauri::command]
 pub async fn get_sys_proxy() -> CmdResult<Mapping> {
-    Sysopt::global().wait_idle().await;
-    // With no network service there is no proxy configured anywhere, which reads as disabled.
-    let sys_proxy = match Sysproxy::get_system_proxy() {
-        Err(error) if proxy_control::is_missing_network_service(&error) => Sysproxy::default(),
-        other => other.stringify_err()?,
-    };
-    let Sysproxy {
-        ref host,
-        ref bypass,
-        ref port,
-        ref enable,
-    } = sys_proxy;
+    #[cfg(any(target_os = "android", target_os = "ios"))]
+    return Ok(Mapping::from_iter([
+        ("enable".into(), false.into()),
+        ("server".into(), "".into()),
+        ("bypass".into(), "".into()),
+    ]));
 
-    let mut map = Mapping::new();
-    map.insert("enable".into(), (*enable).into());
-    map.insert("server".into(), format!("{}:{}", host, port).into());
-    map.insert("bypass".into(), bypass.as_str().into());
-    Ok(map)
+    #[cfg(not(any(target_os = "android", target_os = "ios")))]
+    {
+        Sysopt::global().wait_idle().await;
+        // With no network service there is no proxy configured anywhere, which reads as disabled.
+        let sys_proxy = match Sysproxy::get_system_proxy() {
+            Err(error) if proxy_control::is_missing_network_service(&error) => Sysproxy::default(),
+            other => other.stringify_err()?,
+        };
+        let Sysproxy {
+            ref host,
+            ref bypass,
+            ref port,
+            ref enable,
+        } = sys_proxy;
+
+        let mut map = Mapping::new();
+        map.insert("enable".into(), (*enable).into());
+        map.insert("server".into(), format!("{}:{}", host, port).into());
+        map.insert("bypass".into(), bypass.as_str().into());
+        Ok(map)
+    }
 }
 
 #[tauri::command]
 pub async fn get_auto_proxy() -> CmdResult<Mapping> {
-    Sysopt::global().wait_idle().await;
-    let auto_proxy = match Autoproxy::get_auto_proxy() {
-        Err(error) if proxy_control::is_missing_network_service(&error) => Autoproxy::default(),
-        other => other.stringify_err()?,
-    };
-    let Autoproxy { ref enable, ref url } = auto_proxy;
+    #[cfg(any(target_os = "android", target_os = "ios"))]
+    return Ok(Mapping::from_iter([
+        ("enable".into(), false.into()),
+        ("url".into(), "".into()),
+    ]));
 
-    let mut map = Mapping::new();
-    map.insert("enable".into(), (*enable).into());
-    map.insert("url".into(), url.as_str().into());
-    Ok(map)
+    #[cfg(not(any(target_os = "android", target_os = "ios")))]
+    {
+        Sysopt::global().wait_idle().await;
+        let auto_proxy = match Autoproxy::get_auto_proxy() {
+            Err(error) if proxy_control::is_missing_network_service(&error) => Autoproxy::default(),
+            other => other.stringify_err()?,
+        };
+        let Autoproxy { ref enable, ref url } = auto_proxy;
+
+        let mut map = Mapping::new();
+        map.insert("enable".into(), (*enable).into());
+        map.insert("url".into(), url.as_str().into());
+        Ok(map)
+    }
 }
 
 #[tauri::command]

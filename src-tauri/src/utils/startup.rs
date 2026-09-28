@@ -30,6 +30,7 @@ pub(crate) fn report_error(error: &anyhow::Error) {
         }
     };
 
+    #[cfg(not(any(target_os = "android", target_os = "ios")))]
     let _ = rfd::MessageDialog::new()
         .set_level(rfd::MessageLevel::Error)
         .set_title("Clash Verge startup failed")

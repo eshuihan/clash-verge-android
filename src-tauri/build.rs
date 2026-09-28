@@ -35,7 +35,45 @@ fn main() -> Result<(), Box<dyn std::error::Error>> {
     }
 
     #[cfg(not(feature = "clippy"))]
-    tauri_build::build();
+    {
+        tauri_build::build();
+        patch_mihomo_android_project();
+    }
 
     Ok(())
+}
+
+fn patch_mihomo_android_project() {
+    if std::env::var("CARGO_CFG_TARGET_OS").as_deref() != Ok("android") {
+        return;
+    }
+
+    let project_path = std::env::var_os("TAURI_ANDROID_PROJECT_PATH")
+        .map(std::path::PathBuf::from)
+        .or_else(|| {
+            std::env::var_os("CARGO_MANIFEST_DIR").map(|dir| std::path::PathBuf::from(dir).join("gen/android"))
+        });
+    let Some(project_path) = project_path else {
+        return;
+    };
+
+    // The mihomo plugin currently has no Android-native module. Its generated
+    // project only contains a second copy of Tauri's API library, which would
+    // produce duplicate classes when merged with the app's tauri-android module.
+    for path in [
+        project_path.join("tauri.settings.gradle"),
+        project_path.join("app").join("tauri.build.gradle.kts"),
+    ] {
+        let Ok(contents) = std::fs::read_to_string(&path) else {
+            continue;
+        };
+        let updated = contents
+            .lines()
+            .filter(|line| !line.contains("tauri-plugin-mihomo"))
+            .collect::<Vec<_>>()
+            .join("\n");
+        if updated != contents {
+            let _ = std::fs::write(path, format!("{updated}\n"));
+        }
+    }
 }

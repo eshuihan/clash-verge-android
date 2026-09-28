@@ -593,6 +593,11 @@ pub const fn init_scheme() -> Result<()> {
     Ok(())
 }
 
+#[cfg(any(target_os = "android", target_os = "ios"))]
+pub const fn init_scheme() -> Result<()> {
+    Ok(())
+}
+
 #[cfg(target_os = "linux")]
 const DEEP_LINK_SCHEMES: &[&str] = &["clash", "clash-verge"];
 

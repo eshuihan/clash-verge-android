@@ -126,6 +126,11 @@ pub fn service_path() -> Result<PathBuf> {
     Ok(res_dir.join("clash-verge-service.exe"))
 }
 
+#[cfg(any(target_os = "android", target_os = "ios"))]
+pub fn service_path() -> Result<PathBuf> {
+    Ok(app_resources_dir()?.join("clash-verge-service"))
+}
+
 pub fn sidecar_log_dir() -> Result<PathBuf> {
     let log_dir = app_logs_dir()?.join("sidecar");
     let _ = std::fs::create_dir_all(&log_dir);
@@ -193,6 +198,11 @@ pub fn sidecar_ipc_path() -> Result<PathBuf> {
 }
 
 #[cfg(target_os = "linux")]
+fn sidecar_ipc_path_for(app_root: &std::path::Path, _identity: &clash_verge_service_ipc::OwnerIdentity) -> PathBuf {
+    app_root.join("verge-mihomo.sock")
+}
+
+#[cfg(any(target_os = "android", target_os = "ios"))]
 fn sidecar_ipc_path_for(app_root: &std::path::Path, _identity: &clash_verge_service_ipc::OwnerIdentity) -> PathBuf {
     app_root.join("verge-mihomo.sock")
 }

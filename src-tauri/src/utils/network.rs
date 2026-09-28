@@ -7,6 +7,7 @@ use reqwest::{
 };
 use smartstring::alias::String;
 use std::{sync::Arc, time::Duration};
+#[cfg(not(any(target_os = "android", target_os = "ios")))]
 use sysproxy::Sysproxy;
 use tauri::Url;
 
@@ -233,11 +234,14 @@ impl NetworkManager {
                 Some(format!("http://127.0.0.1:{port}"))
             }
             ProxyType::System => {
+                #[cfg(not(any(target_os = "android", target_os = "ios")))]
                 if let Ok(p @ Sysproxy { enable: true, .. }) = Sysproxy::get_system_proxy() {
                     Some(format!("http://{}:{}", p.host, p.port))
                 } else {
                     None
                 }
+                #[cfg(any(target_os = "android", target_os = "ios"))]
+                None
             }
         };
 

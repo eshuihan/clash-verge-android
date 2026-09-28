@@ -195,6 +195,7 @@ impl WindowManager {
 
         let mut operations_successful = true;
 
+        #[cfg(not(any(target_os = "android", target_os = "ios")))]
         if window.is_minimized().unwrap_or(false) {
             logging!(debug, Type::Window, "窗口已最小化，正在取消最小化");
             if let Err(e) = window.unminimize() {

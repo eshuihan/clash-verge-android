@@ -41,6 +41,7 @@ fn restore_default_size_if_needed(window: &WebviewWindow) {
         Type::Window,
         window.set_size(tauri::LogicalSize::new(DEFAULT_WIDTH, DEFAULT_HEIGHT))
     );
+    #[cfg(not(any(target_os = "android", target_os = "ios")))]
     logging_error!(Type::Window, window.center());
 }
 
@@ -65,7 +66,7 @@ pub async fn build_new_window() -> Result<WebviewWindow, String> {
     let prefers_dark_background = match resolved_theme {
         Some(Theme::Dark) => true,
         Some(Theme::Light) => false,
-        _ => !matches!(detect_system_theme().ok(), Some(SystemTheme::Light)),
+        _ => !matches!(detect_system_theme(), SystemTheme::Light),
     };
 
     let background_color = if prefers_dark_background {
@@ -81,23 +82,32 @@ pub async fn build_new_window() -> Result<WebviewWindow, String> {
         "main", /* the unique window label */
         tauri::WebviewUrl::App(start_page.into()),
     )
-    .title("Clash Verge")
-    .center()
-    .decorations(DEFAULT_DECORATIONS)
-    .fullscreen(false)
-    .inner_size(DEFAULT_WIDTH, DEFAULT_HEIGHT)
-    .min_inner_size(MINIMAL_WIDTH, MINIMAL_HEIGHT)
-    .visible(false) // 等待主题色准备好后再展示，避免启动色差
-    .initialization_script(&initial_script)
-    .general_autofill_enabled(false) // 禁用自动填充
-    .on_page_load(move |window, payload| {
-        if payload.event() != PageLoadEvent::Finished {
-            return;
-        }
+    .title("Clash Verge");
 
-        logging_error!(Type::Window, window.show());
-        logging_error!(Type::Window, window.set_focus());
-    });
+    #[cfg(not(any(target_os = "android", target_os = "ios")))]
+    {
+        builder = builder.center();
+    }
+
+    #[cfg(not(any(target_os = "android", target_os = "ios")))]
+    {
+        builder = builder.decorations(DEFAULT_DECORATIONS).fullscreen(false);
+    }
+
+    builder = builder
+        .inner_size(DEFAULT_WIDTH, DEFAULT_HEIGHT)
+        .min_inner_size(MINIMAL_WIDTH, MINIMAL_HEIGHT)
+        .visible(false) // 等待主题色准备好后再展示，避免启动色差
+        .initialization_script(&initial_script)
+        .general_autofill_enabled(false) // 禁用自动填充
+        .on_page_load(move |window, payload| {
+            if payload.event() != PageLoadEvent::Finished {
+                return;
+            }
+
+            logging_error!(Type::Window, window.show());
+            logging_error!(Type::Window, window.set_focus());
+        });
 
     if let Some(theme) = resolved_theme {
         builder = builder.theme(Some(theme));

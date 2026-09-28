@@ -44,17 +44,8 @@ mod app_init {
         let mut builder = builder
             .plugin(tauri_plugin_clash_verge_sysinfo::init())
             .plugin(tauri_plugin_notification::init())
-            .plugin(
-                tauri_plugin_updater::Builder::new()
-                    .default_version_comparator(|current, release| {
-                        release.version > current
-                            || core::updater::is_build_to_stable(&current.to_string(), &release.version.to_string())
-                    })
-                    .build(),
-            )
             .plugin(tauri_plugin_clipboard_manager::init())
             .plugin(tauri_plugin_process::init())
-            .plugin(tauri_plugin_global_shortcut::Builder::new().build())
             .plugin(tauri_plugin_fs::init())
             .plugin(tauri_plugin_dialog::init())
             .plugin(tauri_plugin_shell::init())
@@ -67,6 +58,20 @@ mod app_init {
                     .socket_path(crate::config::IClashTemp::guard_external_controller_ipc())
                     .build(),
             );
+
+        #[cfg(not(any(target_os = "android", target_os = "ios")))]
+        {
+            builder = builder
+                .plugin(
+                    tauri_plugin_updater::Builder::new()
+                        .default_version_comparator(|current, release| {
+                            release.version > current
+                                || core::updater::is_build_to_stable(&current.to_string(), &release.version.to_string())
+                        })
+                        .build(),
+                )
+                .plugin(tauri_plugin_global_shortcut::Builder::new().build());
+        }
 
         // Devtools plugin only in debug mode with feature tauri-dev
         // to avoid duplicated registering of logger since the devtools plugin also registers a logger
@@ -97,30 +102,48 @@ mod app_init {
 
     /// Setup autostart plugin
     pub fn setup_autostart(app: &tauri::App) -> Result<(), Box<dyn std::error::Error>> {
-        #[cfg(target_os = "macos")]
-        let mut auto_start_plugin_builder = tauri_plugin_autostart::Builder::new();
-        #[cfg(not(target_os = "macos"))]
-        let auto_start_plugin_builder = tauri_plugin_autostart::Builder::new();
-
-        #[cfg(target_os = "macos")]
+        #[cfg(any(target_os = "android", target_os = "ios"))]
         {
-            auto_start_plugin_builder = auto_start_plugin_builder
-                .macos_launcher(MacosLauncher::LaunchAgent)
-                .app_name(&app.config().identifier);
+            let _ = app;
+            return Ok(());
         }
-        app.handle().plugin(auto_start_plugin_builder.build())?;
-        Ok(())
+
+        #[cfg(not(any(target_os = "android", target_os = "ios")))]
+        {
+            #[cfg(target_os = "macos")]
+            let mut auto_start_plugin_builder = tauri_plugin_autostart::Builder::new();
+            #[cfg(not(target_os = "macos"))]
+            let auto_start_plugin_builder = tauri_plugin_autostart::Builder::new();
+
+            #[cfg(target_os = "macos")]
+            {
+                auto_start_plugin_builder = auto_start_plugin_builder
+                    .macos_launcher(MacosLauncher::LaunchAgent)
+                    .app_name(&app.config().identifier);
+            }
+            app.handle().plugin(auto_start_plugin_builder.build())?;
+            Ok(())
+        }
     }
 
     /// Setup window state management
     pub fn setup_window_state(app: &tauri::App) -> Result<(), Box<dyn std::error::Error>> {
-        logging!(debug, Type::Setup, "初始化窗口状态管理...");
-        let window_state_plugin = tauri_plugin_window_state::Builder::new()
-            .with_filename(files::WINDOW_STATE)
-            .with_state_flags(tauri_plugin_window_state::StateFlags::default())
-            .build();
-        app.handle().plugin(window_state_plugin)?;
-        Ok(())
+        #[cfg(any(target_os = "android", target_os = "ios"))]
+        {
+            let _ = app;
+            return Ok(());
+        }
+
+        #[cfg(not(any(target_os = "android", target_os = "ios")))]
+        {
+            logging!(debug, Type::Setup, "初始化窗口状态管理...");
+            let window_state_plugin = tauri_plugin_window_state::Builder::new()
+                .with_filename(files::WINDOW_STATE)
+                .with_state_flags(tauri_plugin_window_state::StateFlags::default())
+                .build();
+            app.handle().plugin(window_state_plugin)?;
+            Ok(())
+        }
     }
 
     pub fn generate_handlers() -> impl Fn(tauri::ipc::Invoke<tauri::Wry>) -> bool + Send + Sync + 'static {
@@ -239,6 +262,7 @@ fn handle_singleton_startup(
     }
 }
 
+#[cfg_attr(mobile, tauri::mobile_entry_point)]
 pub fn run() -> std::process::ExitCode {
     #[cfg(all(target_os = "macos", not(debug_assertions), not(test), not(feature = "verge-dev")))]
     if utils::macos_launch_guard::enforce_before_initialization() == utils::macos_launch_guard::LaunchDisposition::Exit

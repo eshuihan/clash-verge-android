@@ -152,14 +152,19 @@ const fn was_a_failed_system_call(_error: &anyhow::Error) -> bool {
     false
 }
 
+#[cfg(target_os = "macos")]
 fn was_refused_locally(error: &anyhow::Error) -> bool {
-    cfg!(target_os = "macos")
-        && error.chain().any(|cause| {
-            matches!(
-                cause.downcast_ref::<sysproxy::Error>(),
-                Some(sysproxy::Error::RequiresAdminPrivileges)
-            )
-        })
+    error.chain().any(|cause| {
+        matches!(
+            cause.downcast_ref::<sysproxy::Error>(),
+            Some(sysproxy::Error::RequiresAdminPrivileges)
+        )
+    })
+}
+
+#[cfg(not(target_os = "macos"))]
+const fn was_refused_locally(_error: &anyhow::Error) -> bool {
+    false
 }
 
 /// Whether macOS has no network service to write the proxy on.

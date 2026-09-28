@@ -306,6 +306,11 @@ pub(crate) fn trusted_service_evidence() -> Result<bool> {
     macos_service_install_marker_exists().context("failed to inspect launchd service registration")
 }
 
+#[cfg(any(target_os = "android", target_os = "ios"))]
+pub(crate) fn trusted_service_evidence() -> Result<bool> {
+    Ok(false)
+}
+
 /// Stateless legacy façade over [`RUN_STATE`] retained for existing call sites.
 pub struct ServiceManager;
 
@@ -677,6 +682,11 @@ fn uninstall_service() -> Result<()> {
     }
 
     Ok(())
+}
+
+#[cfg(any(target_os = "android", target_os = "ios"))]
+fn uninstall_service() -> Result<()> {
+    bail!("service installation is unavailable on mobile platforms")
 }
 
 fn install_service() -> Result<()> {
