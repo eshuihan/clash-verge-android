@@ -280,7 +280,12 @@ pub fn run() -> std::process::ExitCode {
         logging!(error, Type::Setup, "应用数据目录所有权修复失败: {error:#}");
     }
 
-    match handle_singleton_startup(app_init::init_singleton_check(), utils::startup::report_error) {
+    #[cfg(any(target_os = "android", target_os = "ios"))]
+    let startup_action = StartupAction::Continue;
+    #[cfg(not(any(target_os = "android", target_os = "ios")))]
+    let startup_action = handle_singleton_startup(app_init::init_singleton_check(), utils::startup::report_error);
+
+    match startup_action {
         StartupAction::Continue => {}
         StartupAction::ExitSuccess => return std::process::ExitCode::SUCCESS,
         StartupAction::ExitFailure => return std::process::ExitCode::FAILURE,

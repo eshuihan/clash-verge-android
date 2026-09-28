@@ -1,5 +1,5 @@
 use crate::core::{CoreManager, handle, manager::RunningMode};
-use anyhow::Result;
+use anyhow::{Context as _, Result};
 use async_trait::async_trait;
 use clash_verge_logging::{Type, logging};
 use std::{
@@ -24,11 +24,25 @@ pub static PROFILE_YAML: &str = "profiles.yaml";
 /// Marks that the one-shot raise of too-short auto-update intervals has already run.
 pub static UPDATE_INTERVAL_MIGRATED: &str = ".update-interval-migrated";
 
-/// Uses the same platform data resolver as Tauri, including before its handle exists.
+/// Resolve the app data directory before Tauri has initialized an app handle.
+#[cfg(not(any(target_os = "android", target_os = "ios")))]
 pub fn app_home_dir() -> Result<PathBuf> {
     ::dirs::data_dir()
         .map(|root| root.join(APP_ID))
         .ok_or_else(|| anyhow::anyhow!("Failed to get the app home directory"))
+}
+
+/// Android and iOS expose the writable app data directory through Tauri's path
+/// resolver rather than the desktop `dirs` crate.
+#[cfg(any(target_os = "android", target_os = "ios"))]
+pub fn app_home_dir() -> Result<PathBuf> {
+    let app_handle = crate::APP_HANDLE
+        .get()
+        .context("Tauri app handle is not initialized")?;
+    app_handle
+        .path()
+        .app_data_dir()
+        .context("Failed to get the app data directory")
 }
 
 pub fn preinit_app_data_dir() -> Result<PathBuf> {
