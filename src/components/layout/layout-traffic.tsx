@@ -17,11 +17,7 @@ import parseTraffic from '@/utils/parse-traffic'
 
 import { TrafficGraph, type TrafficRef } from './traffic-graph'
 
-interface LayoutTrafficProps {
-  showGraph?: boolean
-}
-
-export const LayoutTraffic = ({ showGraph = true }: LayoutTrafficProps) => {
+export const LayoutTraffic = () => {
   const { t } = useTranslation()
   const { verge } = useVerge()
 
@@ -81,7 +77,7 @@ export const LayoutTraffic = ({ showGraph = true }: LayoutTrafficProps) => {
   return (
     <LightweightTrafficErrorBoundary>
       <Box sx={{ position: 'relative' }}>
-        {showGraph && trafficGraph && pageVisible && (
+        {trafficGraph && pageVisible && (
           <div
             style={{ width: '100%', height: 60, marginBottom: 6 }}
             onClick={trafficRef.current?.toggleStyle}

@@ -9,7 +9,6 @@ import LogoSvg from '@/assets/image/logo.svg?react'
 import { useVerge } from '@/hooks/use-verge'
 import { useNavMenuOrder } from '@/pages/_layout/hooks'
 import { navItems } from '@/pages/_navigation'
-import getSystem from '@/utils/get-system'
 
 import { SortableItem } from '../base'
 
@@ -30,10 +29,6 @@ export const LayoutSidebar = (props: LayoutSidebarProps) => {
   const { isDark, isCollapsed } = props
   const { t } = useTranslation()
   const { verge, mutateVerge, patchVerge } = useVerge()
-  const isAndroidTv =
-    getSystem() === 'android' &&
-    typeof window !== 'undefined' &&
-    window.matchMedia('(min-width: 900px)').matches
   const [menuUnlocked, setMenuUnlocked] = useState(false)
   const [menuContextPosition, setMenuContextPosition] =
     useState<MenuContextPosition | null>(null)
@@ -229,7 +224,7 @@ export const LayoutSidebar = (props: LayoutSidebarProps) => {
 
       {/* Traffic */}
       <div className="the-traffic">
-        <LayoutTraffic showGraph={!isAndroidTv} />
+        <LayoutTraffic />
       </div>
     </div>
   )
