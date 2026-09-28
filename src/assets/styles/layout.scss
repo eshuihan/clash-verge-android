@@ -349,13 +349,34 @@
       border-radius: 14px;
     }
 
-    .MuiButtonBase-root:focus,
-    button:focus,
-    [role='button']:focus {
-      outline: 4px solid var(--primary-main) !important;
-      outline-offset: 3px;
-      box-shadow: 0 0 0 7px rgba(91, 92, 157, 0.25);
+    .MuiButtonBase-root:focus-visible,
+    button:focus-visible,
+    [role='button']:focus-visible {
+      outline: 2px solid var(--primary-main) !important;
+      outline-offset: 2px;
+      box-shadow: none !important;
       z-index: 1;
+    }
+
+    .layout-content__left .MuiListItemButton-root {
+      position: relative;
+
+      &::before {
+        content: '';
+        position: absolute;
+        left: 0;
+        top: 12px;
+        bottom: 12px;
+        width: 4px;
+        border-radius: 0 4px 4px 0;
+        background: var(--primary-main);
+        opacity: 0;
+        transition: opacity 0.18s ease;
+      }
+
+      &.Mui-selected::before {
+        opacity: 1;
+      }
     }
   }
 }
