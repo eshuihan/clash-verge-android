@@ -44,6 +44,10 @@ const Layout = () => {
   const { language } = verge ?? {}
   const navCollapsed = verge?.collapse_navbar ?? false
   const isAndroid = OS === 'android'
+  const isAndroidTv =
+    isAndroid &&
+    typeof window !== 'undefined' &&
+    window.matchMedia('(min-width: 900px)').matches
   const { switchLanguage } = useI18n()
   const navigate = useNavigate()
   const themeReady = useMemo(() => Boolean(theme), [theme])
@@ -128,7 +132,7 @@ const Layout = () => {
       <Paper
         square
         elevation={0}
-        className={`${OS} layout${navCollapsed ? ' layout--nav-collapsed' : ''}`}
+        className={`${OS}${isAndroidTv ? ' android-tv' : ''} layout${navCollapsed ? ' layout--nav-collapsed' : ''}`}
         style={{
           borderTopLeftRadius: '0px',
           borderTopRightRadius: '0px',

@@ -10,6 +10,7 @@ import { useMatch, useNavigate, useResolvedPath } from 'react-router'
 
 import type { SortableItemRenderProps } from '@/components/base/sortable-item'
 import { useVerge } from '@/hooks/use-verge'
+import getSystem from '@/utils/get-system'
 
 interface Props {
   to: string
@@ -25,6 +26,7 @@ export const LayoutItem = (props: Props) => {
   const resolved = useResolvedPath(to)
   const match = useMatch({ path: resolved.pathname, end: true })
   const navigate = useNavigate()
+  const isAndroid = getSystem() === 'android'
 
   const effectiveMenuIcon =
     navCollapsed && menu_icon === 'disable' ? 'monochrome' : menu_icon
@@ -38,6 +40,7 @@ export const LayoutItem = (props: Props) => {
       <ListItemButton
         ref={sortable?.handleRef}
         selected={!!match}
+        autoFocus={isAndroid && !!match}
         sx={[
           {
             borderRadius: 2,

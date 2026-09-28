@@ -311,6 +311,50 @@
   }
 }
 
+// Android TV uses the same WebView as Android phones, but navigation is driven
+// by a D-pad. Keep the desktop information density while making focus movement
+// obvious and keeping the navigation rail from consuming half the screen.
+@media (min-width: 900px) {
+  .android-tv.layout {
+    .layout-content__left {
+      flex: 0 0 204px;
+      width: 204px;
+
+      .the-logo {
+        flex-basis: 64px;
+        padding: 0 14px;
+      }
+
+      .the-menu {
+        padding: 10px 8px;
+      }
+
+      .the-traffic {
+        display: none;
+      }
+    }
+
+    .layout-content__right .the-content,
+    .base-container section {
+      scroll-padding: 32px;
+    }
+
+    .MuiListItemButton-root {
+      min-height: 48px;
+      border-radius: 14px;
+    }
+
+    .MuiButtonBase-root:focus,
+    button:focus,
+    [role='button']:focus {
+      outline: 4px solid var(--primary-main) !important;
+      outline-offset: 3px;
+      box-shadow: 0 0 0 7px rgba(91, 92, 157, 0.25);
+      z-index: 1;
+    }
+  }
+}
+
 .layout.layout--nav-collapsed {
   --layout-nav-collapsed-width: 72px;
   --layout-nav-item-size: 52px;
